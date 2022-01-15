@@ -5,33 +5,28 @@
 .type _start, @function
 .global _start
 _start:
-	.cfi_startproc
+    .cfi_startproc
  
 .option push
 .option norelax
-	la gp, global_pointer
+    la gp, global_pointer
 .option pop
+
+    csrw satp, zero
  
-	/* Reset satp */
-	csrw satp, zero
- 
-	/* Setup stack */
-	la sp, stack_top
- 
-	/* Clear the BSS section */
-	la t5, bss_start
-	la t6, bss_end
+    la sp, stack_top
+
+    la t5, bss_start
+    la t6, bss_end
 bss_clear:
-	sd zero, (t5)
-	addi t5, t5, 8
-	bgeu t5, t6, bss_clear
+    sd zero, (t5)
+    addi t5, t5, 8
+    bgeu t5, t6, bss_clear
  
-	la t0, kmain
-	csrw mepc, t0
+    la t0, kmain
+    csrw mepc, t0
+
+    tail kmain
  
-	/* Jump to kernel! */
-	tail kmain
- 
-	.cfi_endproc
- 
+    .cfi_endproc
 .end

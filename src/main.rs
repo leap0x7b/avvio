@@ -2,12 +2,15 @@
 #![no_main]
 #![feature(panic_info_message)]
 
-mod uart;
+mod uart; // this is required for some dumb reason
 use core::arch::asm;
 
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => (uart::_print(format_args!($($arg)*)));
+    ($($args:tt)+) => ({
+        use core::fmt::Write;
+        let _ = write!(crate::uart::Uart::new(0x1000_0000), $($args)+);
+    });
 }
 
 #[macro_export]
@@ -33,11 +36,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
     } else {
         println!("no information available.");
     }
-    abort();
-}
 
-#[no_mangle]
-extern "C" fn abort() -> ! {
     loop {
         unsafe {
             asm!("wfi");
@@ -46,6 +45,8 @@ extern "C" fn abort() -> ! {
 }
 
 #[no_mangle]
-fn kmain() {
+extern "C" fn kmain() {
+    let mut con_uart = uart::Uart::new(0x1000_0000);
+    con_uart.init();
     print!("Hello, world!");
 }
