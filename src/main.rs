@@ -2,7 +2,8 @@
 #![no_main]
 #![feature(panic_info_message)]
 
-mod uart; // this is required for some dumb reason
+mod asm;
+mod uart;
 use core::arch::asm;
 
 #[macro_export]

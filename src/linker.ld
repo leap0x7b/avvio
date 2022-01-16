@@ -1,7 +1,7 @@
 ENTRY(_start);
 
 MEMORY {
-    ram (wxa!ri) : ORIGIN = 0x80000000, LENGTH = 128M
+    ram (rwx) : ORIGIN = 0x80000000, LENGTH = 128M
 }
  
 PHDRS {
@@ -44,4 +44,8 @@ SECTIONS {
 
     PROVIDE(_heap_start = _stack);
     PROVIDE(_heap_size = _memory_end - _stack);
+
+    /DISCARD/ : { 
+        *(.eh_frame_hdr .eh_frame) 
+    }
 }
