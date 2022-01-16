@@ -5,28 +5,43 @@
 .type _start, @function
 .global _start
 _start:
-    .cfi_startproc
- 
+    csrr t0, mhartid
+    bnez t0, 3f
+    csrw satp, zero
 .option push
 .option norelax
-    la gp, global_pointer
+    la gp, _global_pointer
 .option pop
+    la a0, _bss_start
+    la a1, _bss_end
+    bgeu a0, a1, 2f
+1:
+    sd zero, (a0)
+    addi a0, a0, 8
+    bltu a0, a1, 1b
+2:
+    la sp, _stack
 
-    csrw satp, zero
- 
-    la sp, stack_top
+    li t0, (0b11 << 11) | (1 << 7) | (1 << 3)
+    csrw mstatus, t0
 
-    la t5, bss_start
-    la t6, bss_end
-bss_clear:
-    sd zero, (t5)
-    addi t5, t5, 8
-    bgeu t5, t6, bss_clear
- 
-    la t0, kmain
-    csrw mepc, t0
+    la t1, kmain
+    csrw mepc, t1
 
-    tail kmain
- 
-    .cfi_endproc
-.end
+    la t2, trap
+    csrw mtvec, t2
+
+    li t3, (1 << 3) | (1 << 7) | (1 << 11)
+    csrw mie, t3
+
+    la ra, 4f
+    mret
+3:
+
+4:
+    wfi
+    j 4b
+
+.global trap
+trap:
+    mret
